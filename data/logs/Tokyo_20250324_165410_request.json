@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-03-24T16:54:10.332806",
+  "request_id": "Tokyo_20250324_165410",
+  "user_profile": {
+    "budget": "Mid",
+    "travel_style": [
+      "Cultural",
+      "Relaxation",
+      "Shopping",
+      "Nature",
+      "Photography"
+    ],
+    "trip_duration": "7-day"
+  },
+  "destination": "Tokyo"
+}

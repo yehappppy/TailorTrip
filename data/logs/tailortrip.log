@@ -1,0 +1,19 @@
+2025-03-24 16:58:12 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 16:58:12 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-24 17:09:37 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 17:09:37 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-24 17:21:54 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 17:21:54 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-24 17:32:32 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 17:32:32 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-24 18:00:19 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.433477 seconds
+2025-03-24 18:01:21 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.886146 seconds
+2025-03-24 18:02:23 - ERROR - llm_agent.planner:generate_itinerary:61 - Error generating itinerary: Connection error.
+2025-03-24 18:04:36 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.467108 seconds
+2025-03-24 18:05:38 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.990494 seconds
+2025-03-24 18:06:40 - ERROR - llm_agent.planner:generate_itinerary:61 - Error generating itinerary: Connection error.
+2025-03-24 18:08:08 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.488893 seconds
+2025-03-24 18:09:09 - INFO - openai._base_client:_retry_request:1051 - Retrying request to /chat/completions in 0.901439 seconds
+2025-03-24 18:10:11 - ERROR - llm_agent.planner:generate_itinerary:61 - Error generating itinerary: Connection error.
+2025-03-24 18:11:57 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 18:11:57 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
