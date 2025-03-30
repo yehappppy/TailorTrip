@@ -1,6 +1,15 @@
 ## Demo
 這個項目整體大綱是用`OpenManus`結合`Deepseek-R1`api生成的的，項目代碼是用`windsurf`結合`Claude 3.5 Sonnect`，旅行計劃planner的api是`Qwen/QwQ-32B`。
 
+### 運行應用
+```shell
+conda create --name tailortrip python=3.9.12
+conda activate tailortrip
+pip install -r requirements.txt
+streamlit run main.py
+```
+
+
 ### 開始界面
 ![開始界面](./images/demo_1.png)
 

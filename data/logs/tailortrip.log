@@ -17,3 +17,7 @@
 2025-03-24 18:10:11 - ERROR - llm_agent.planner:generate_itinerary:61 - Error generating itinerary: Connection error.
 2025-03-24 18:11:57 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
 2025-03-24 18:11:57 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-30 14:59:38 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-30 14:59:38 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
+2025-03-30 23:56:58 - INFO - httpx:_send_single_request:1025 - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-30 23:56:58 - INFO - llm_agent.planner:generate_itinerary:56 - Successfully generated itinerary for Tokyo
