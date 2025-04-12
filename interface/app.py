@@ -1,7 +1,9 @@
 import streamlit as st
 import logging
-from typing import Optional
+import asyncio
+from typing import Optional, Union
 from llm_agent.planner import TravelPlannerAgent
+from llm_agent.enhanced_planner import EnhancedTravelPlannerAgent
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +84,7 @@ def render_markdown_sections(markdown_text: str) -> None:
         </div>
     """, unsafe_allow_html=True)
 
-def main(planner: Optional[TravelPlannerAgent] = None):
+def main(planner: Optional[Union[TravelPlannerAgent, EnhancedTravelPlannerAgent]] = None):
     st.set_page_config(
         page_title="TailorTrip - AI Travel Planner",
         page_icon="✈️",
@@ -156,7 +158,12 @@ def main(planner: Optional[TravelPlannerAgent] = None):
                     }
                     
                     # Generate itinerary
-                    result = planner.generate_itinerary(profile, destination)
+                    if isinstance(planner, EnhancedTravelPlannerAgent):
+                        # Use the enhanced planner with async
+                        result = asyncio.run(planner.generate_enhanced_itinerary(profile, destination))
+                    else:
+                        # Use the regular planner
+                        result = planner.generate_itinerary(profile, destination)
                     
                     if isinstance(result, str) and result.startswith("Error:"):
                         st.error(result)
@@ -192,11 +199,14 @@ def main(planner: Optional[TravelPlannerAgent] = None):
 
 def start_app():
     try:
-        planner = TravelPlannerAgent()
-        main(planner=planner)
+        # Initialize the enhanced planner
+        enhanced_planner = EnhancedTravelPlannerAgent()
+        
+        # Use the enhanced planner by default
+        main(planner=enhanced_planner)
     except Exception as e:
         logger.error(f"Error in Streamlit app: {str(e)}")
-        st.error("An error occurred. Please try again.")
+        st.error(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     start_app()

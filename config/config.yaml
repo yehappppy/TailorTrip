@@ -1,0 +1,50 @@
+api_keys:
+  openai_api_key: your_openai_key_here
+  google_api_key: your_google_key_here
+  rapidapi_key: your_rapidapi_key_here
+  instagram_username: your_instagram_username
+  instagram_password: your_instagram_password
+
+llm_configuration:
+  llm_base_url: https://api.siliconflow.cn/v1/
+  llm_api_key: "sk-rkaaajuldwebwppljkefybgzhtoslzjaukylvnivrzanbhjk"
+  models:
+    - model_name: Pro/deepseek-ai/DeepSeek-V3
+      stream: False
+      max_tokens: 8192
+      temperature: 1.0
+      top_p: 0.95
+    - model_name: Pro/deepseek-ai/DeepSeek-R1
+      stream: False
+      max_tokens: 5120
+      temperature: 1.0
+      top_p: 0.95
+    - model_name: Qwen/QwQ-32B
+      stream: False
+      max_tokens: 1024
+      temperature: 0.7
+      top_p: 0.95
+    - model_name: Qwen/Qwen2.5-VL-32B-Instruct
+      stream: False
+      max_tokens: 1024
+      temperature: 0.7
+      top_p: 0.95
+
+application_settings:
+  log_level: INFO
+  log_dir: ./output/logs
+  results_dir: ./output/results
+  default_language: en
+  max_retries: 3
+  default_currency: USD
+
+database_configuration:
+  docs_path: ./data/docs
+  vector_db_path: ./data/vector_store
+  tfidf_path: ./data/tfidf
+  embedding_model: "stsb-roberta-large"
+  embedding_type: "sentence_transformer"
+  chunk_size: 1024
+  chunk_overlap": 256
+  fuzzy_k: 1000
+  semantic_k: 5
