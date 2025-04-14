@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import List, Optional
-import numpy as np
 from sklearn.cluster import KMeans
 import logging
 

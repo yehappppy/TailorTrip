@@ -1,0 +1,16 @@
+# ignore the following when building a docker image
+data/
+images/
+ocr/
+output/
+
+# ignore readme and test files
+README.md
+
+# ignore cache, log, and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.log
+*.tmp
