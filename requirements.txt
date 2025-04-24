@@ -1,6 +1,9 @@
 langchain
 langchain_openai
 langchain_deepseek
+langchain_community
+langchain_huggingface
+sentence_transformers
 openai
 numpy
 pandas
@@ -16,3 +19,7 @@ googlemaps
 faiss-cpu
 pyyaml
 loguru
+elasticsearch
+torch
+torchvision
+torchaudio
