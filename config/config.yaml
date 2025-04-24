@@ -24,6 +24,7 @@ llm_configuration:
       top_p: 0.95
 
 application_settings:
+  log_print: True
   log_level: INFO
   log_dir: ./output/logs
   results_dir: ./output/results

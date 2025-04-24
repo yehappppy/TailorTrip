@@ -26,3 +26,6 @@
         - util：存放一些共用的工具代码，例如导入config，logging等等
 - run_sample.py: 运行示例代码的entry_point
 
+# TODO List
+- [ ] 目前是从单一的初始关键词开始直接构建tree，应该先看过几篇宏观的攻略，针对宏观攻略提到的几个地点作为子树的root再进行搜索。
+- [ ] extract keywords的prompt，以及stopping criteria需要优化，目前会不择手段地提取具体化的关键词，而强行忽略中间层的元素

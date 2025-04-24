@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-from src.llm_agent.sample_chatbot import run_with_tools, run_with_chat, run_with_thinking
+from src.llm_agent.sample.sample_chatbot import run_with_tools, run_with_chat, run_with_thinking
 
 query = "你今天过得好吗?"
 response = run_with_chat(query)
