@@ -1,13 +1,13 @@
-import sys
-import os
 import json
 import re
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+import sys
+import os
 
-from langchain_core.messages import HumanMessage, SystemMessage
+# Add the parent directory of 'src' to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from src.utils.llm import base_llm, cot_llm
-#from src.tools import retriever
-#from src.tools.calculate import add, minus, divide, multiply
+
 
 def call_llm(messages, model_choice="base"):
 
@@ -70,34 +70,36 @@ class IntentCompleter:
                 "role": "system",
                 "content": """# 你是一个旅游推荐系统的AI小助手，请根据输入完成以下两个任务：
                 
-                任务1：提取以下用户偏好信息：
-                - 地区（必填）
+                任务1：根据提取的信息生成最可能的完整查询意图：
+                1. 优先补全景点类需求（游玩时间/门票/预算）
+                2. 其次补全餐饮类需求（预算/人数/忌口）
+                3. 其他可能的详细搜索内容
+                4. 用户意图已完整则返回原输入
+
+                任务2：提取以下用户偏好信息：
+                - 地点（必填）
                 - 人数（必填，数字）
                 - 用餐标准/旅游规格标准（必填，格式如"100每人"）
                 - 排除餐厅/景点（可选）
-                - 类型（必选，格式如景点/餐厅）
-                
-                任务2：根据提取的信息生成最可能的完整查询意图：
-                1. 优先补全景点类需求（游玩时间/门票/预算）
-                2. 其次补全餐饮类需求（预算/人数/忌口）
-                3. 其他可能的搜索内容
-                4. 用户意图已完整则返回原输入
+                - 旅游时长（可选，格式如“几天几晚”）
+                - 其他出现的跟查询相关的关键信息（例如提到夜市、小吃等）
+                请确保每一项偏好都被明确命名分类，不使用“其他”。
                 
                 请严格返回JSON格式，包含两个字段：
-                - "preference": 提取的用户偏好信息
                 - "guess": 生成的完整查询意图
+                - "preference": 提取的用户偏好信息
                 
                 示例：
                 输入："迪士尼"
                 输出：{
-                    "preference": {"地区":"迪士尼","人数":"2","标准":"500每人","类型":"游乐园"},
-                    "guess": "迪士尼两人门票价格和游玩时间"
+                    "guess": "迪士尼两人门票价格和游玩时间",
+                    "preference": {"地区":"迪士尼","人数":"2","标准":"500每人"}
                 }
                 
                 输入："中环 3人"
                 输出：{
-                    "preference": {"地区":"中环","人数":"3","标准":"300每人","类型":"旅游"},
-                    "guess": "中环3人预算300每人一日游"
+                    "guess": "中环3人预算300每人一日游",
+                    "preference": {"地区":"中环","人数":"3","标准":"300每人", "时长":"一日游"}
                 }"""
             },
             {
