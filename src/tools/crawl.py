@@ -1,12 +1,15 @@
-# from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-# from src.utils.llm import base_llm
-# from src.utils.util import structure_output
-from typing import List, Dict, Any
+from langchain_core.tools import tool # 记得取消注释!
+# from typing import List, Dict, Any
+from datetime import datetime
 import subprocess
 import json
 import os
 import sys
-from datetime import datetime
+import time
+
+
+
+
 
 # SEARCH_INFORMATION_PROMPT = """
 # 你要假装成为一个搜索引擎。根据用户给定的关键词，你需要：
@@ -48,19 +51,13 @@ from datetime import datetime
 #     result = llm.invoke(messages).content
 #     return [result]
 
-def tool(func):
-    """
-    A placeholder decorator for marking functions as tools.
-    This can later be extended to include specific functionality.
-    """
-    def wrapper(*args, **kwargs):
-        print(f"Executing tool: {func.__name__}")
-        return func(*args, **kwargs)
-    return wrapper
 
 # 定义 search 工具函数
-@tool
-def search(keyword: str) -> list[str]:
+# example usage:  
+# result = search(config.KEYWORDS)  
+## 测试的时候需要注释掉@tool!
+@tool  
+def search(keyword: str) -> list[str]: 
     """
     A tool function to execute a search using the specified keyword and process the JSON results.
     
@@ -68,20 +65,22 @@ def search(keyword: str) -> list[str]:
         keyword (str): The search keyword.
     
     Returns:
-        list[str]: A list of strings, each containing information about one post (title, content, comments, OCR).
+        list[str]: A list of formatted strings containing the extracted information of every post.
     """
     try:
         # 获取TailorTrip目录的路径
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        # print("root_dir:",root_dir)
         sys.path.append(root_dir)
         # 获取MediaCrawler目录的路径
         media_crawler_dir = os.path.join(root_dir, "src", "library", "MediaCrawler")
         # 获取main.py的完整路径
         main_script_path = os.path.join(root_dir, "src", "library", "MediaCrawler", "main.py")
         # 调用命令行工具并传入参数
+        
         subprocess.run(
             [
-                "python", main_script_path,  # 使用完整path
+                "python", main_script_path, 
                 "--platform", "xhs", 
                 "--lt", "qrcode", 
                 "--type", "search", 
@@ -93,8 +92,14 @@ def search(keyword: str) -> list[str]:
         )
         
         # 获取当前日期并格式化
-        current_date = datetime.now().strftime("%Y-%m-%d") # YYYY-mm-dd
+        current_date = datetime.now().strftime("%Y-%m-%d")
         
+        # 动态生成路径
+        # content_json_path = rf"./data/xhs/json/search_contents_{current_date}.json"
+        # comments_json_path = rf"./data/xhs/json/search_comments_{current_date}.json"
+        # images_folder_path = rf"./data/xhs/images"
+        # output_txt_path = rf"./output_test.txt"
+
         # 动态生成路径
         # content_json_path = rf"./data/xhs/json/search_contents_{current_date}.json"
         content_json_path = os.path.join(media_crawler_dir, "data", "xhs", "json", f"search_contents_{current_date}.json")
@@ -127,36 +132,30 @@ def search(keyword: str) -> list[str]:
                 filtered_contents.append(content)
                 seen_titles.add(content["title"])
         
-        # 存储所有帖子信息的列表，每个元素包含一个帖子的完整信息
-        post_list = []
         # 生成最终文本内容
         output_lines = []
-        
         for content in filtered_contents:
             note_id = content["note_id"]
             title = content["title"]
             desc = content["desc"]
             
-            # 创建单个帖子的内容
-            post_lines = []
-            
             # 写标题
-            post_lines.append(f"标题：{title}")
+            output_lines.append(f"标题：{title}")
             
             # 写内容
-            post_lines.append("内容：")
-            post_lines.append(f"{desc}")
+            output_lines.append("内容：")
+            output_lines.append(f"{desc}")
             
             # 写评论
-            post_lines.append("评论：")
+            output_lines.append("评论：")
             if note_id in comments_by_note_id:
                 for comment in comments_by_note_id[note_id]:
-                    post_lines.append(comment)
+                    output_lines.append(comment)
             else:
-                post_lines.append("暂无评论")
+                output_lines.append("暂无评论")
             
             # 写OCR识别结果
-            post_lines.append("OCR识别结果：")
+            output_lines.append("OCR识别结果：")
             note_folder_path = os.path.join(images_folder_path, note_id)
             if os.path.exists(note_folder_path):
                 for txt_file in os.listdir(note_folder_path):
@@ -164,46 +163,48 @@ def search(keyword: str) -> list[str]:
                         txt_file_path = os.path.join(note_folder_path, txt_file)
                         with open(txt_file_path, 'r', encoding='utf-8') as tf:
                             ocr_content = tf.read()
-                            post_lines.append(ocr_content)
+                            output_lines.append(ocr_content)
             else:
-                post_lines.append("暂无OCR识别结果")
+                output_lines.append("暂无OCR识别结果")
             
-            # 将这个帖子的信息添加到列表中
-            post_content = "\n".join(post_lines)
-            post_list.append(post_content)
-            
-            # 添加到输出文件的内容中，包括分隔符
-            output_lines.extend(post_lines)
+            # 添加分隔符
             output_lines.append("\n" + "="*50 + "\n")
         
-        # 将所有内容写入文件
+        # 将所有内容写入文件并返回字符串
         with open(output_txt_path, 'w', encoding='utf-8') as output_file:
-            output_file.write("\n".join(output_lines))
+            str_out = "\n".join(output_lines)
+            output_file.write(str_out)
         
-        # 返回关键词对应爬取到的帖子的列表，每个元素对应一个帖子（标题 内容 评论 ocr合起来）的字符串
-        return post_list
+        # with open(output_txt_path, 'r', encoding='utf-8') as file:
+        #     text = file.read()
+
+        # 按分隔符拆分
+        posts = str_out.split("="*50)[:-1] # 删除列表最后一个元素（没有用，一个换行符）
+        # return "\n".join(output_lines)
+        return posts # a list of strings
     
     except subprocess.CalledProcessError as e:
         # 捕获错误并返回错误信息
-        return [f"Error: {e.stderr.strip()}"]
+        return f"Error: {e.stderr.strip()}"
     except FileNotFoundError as e:
-        return [f"Error: File not found - {e}"]
+        return f"Error: File not found - {e}"
     except json.JSONDecodeError as e:
-        return [f"Error: Failed to decode JSON - {e}"]
+        return f"Error: Failed to decode JSON - {e}"
+    
 
 
-###### 示例调用：######
+###### search函数示例调用：######
 # # 获取TailorTrip的绝对路径并将TailorTrip添加到路径
-# import os
-# import sys
-# import time
 # current_dir = os.path.dirname(os.path.abspath(__file__))  # tools目录
-# src_parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))  # TailorTrip目录
+# src_parent_dir = os.path.dirname((os.path.dirname(current_dir)))  # TailorTrip目录
+# # print(src_parent_dir)
 # sys.path.append(src_parent_dir)
-# from src.library.MediaCrawler.config.base_config import KEYWORDS
+# import src.library.MediaCrawler.config as config
+# print("config.keywords:",config.KEYWORDS)
 # time0=time.time()
-# KEYWORDS = "曾母暗沙旅游" # str; 可修改为任意关键词
-# result = search(KEYWORDS)  # search(keyword: str) -> List[str]
+# result = search(config.KEYWORDS)  
 # time1=time.time()
 # print(f"finish: cost {time1-time0: .2f} seconds")
-# print(result) # List[str]
+# print(result) # 理想情况是List[str]
+# print("length of output:",len(result))
+
