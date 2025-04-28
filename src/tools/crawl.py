@@ -1,63 +1,20 @@
 from langchain_core.tools import tool # 记得取消注释!
-# from typing import List, Dict, Any
+from langchain_core.messages import HumanMessage,AIMessage,SystemMessage
+from typing import List, Dict, Any
 from datetime import datetime
 import subprocess
 import json
 import os
 import sys
 import time
+import platform
 
+from src.utils.llm import base_llm
 
+# Check if we're on Windows
+IS_WINDOWS = platform.system() == 'Windows'
 
-
-
-# SEARCH_INFORMATION_PROMPT = """
-# 你要假装成为一个搜索引擎。根据用户给定的关键词，你需要：
-# 1. 根据关键词编撰出一篇推文
-# 2. 确保信息与用户的关键词相关
-# 3. 推文中应当包含具体的细节，每次回答的结果相互独立
-
-# 请直接进行输出：
-# """
-
-# SAMPLE_INPUT = """
-# 日本京都樱花季
-# """
-
-# SAMPLE_OUTPUT = """
-# 🌸 京都樱花季攻略来啦！2024年预测花期：3月25日-4月5日，比往年稍早！最佳赏樱地：
-# 1️⃣ 哲学之道：2公里樱花隧道，夜樱点灯超梦幻
-# 2️⃣ 岚山竹林：樱花与竹林的绝妙组合
-# 3️⃣ 清水寺：千年古刹+粉色樱花=绝美明信片风景
-
-# 🏨 住宿建议：祗园附近传统町屋，人均¥800/晚，可体验茶道和和服
-
-# 🚆 交通贴士：推荐购买"京都巴士一日券"（¥700），无限次乘坐！
-
-# ⚠️ 注意：热门景点需提前1个月预约，特别是怀石料理餐厅！#京都旅行 #樱花季
-# """
-
-
-
-# v2: modify search function by using mediacrawler
-# def search(keyword: str) -> List[Dict[str, Any]]:
-#     llm = base_llm()
-#     messages = [
-#         SystemMessage(content=SEARCH_INFORMATION_PROMPT),
-#         HumanMessage(content=SAMPLE_INPUT),
-#         AIMessage(content=SAMPLE_OUTPUT),
-#         HumanMessage(content=keyword)
-#     ]
-#     result = llm.invoke(messages).content
-#     return [result]
-
-
-# 定义 search 工具函数
-# example usage:  
-# result = search(config.KEYWORDS)  
-## 测试的时候需要注释掉@tool!
-@tool  
-def search(keyword: str) -> list[str]: 
+def crawl(keyword: str) -> list[str]: 
     """
     A tool function to execute a search using the specified keyword and process the JSON results.
     
@@ -134,28 +91,30 @@ def search(keyword: str) -> list[str]:
         
         # 生成最终文本内容
         output_lines = []
-        for content in filtered_contents:
+        for idx, content in enumerate(filtered_contents):
             note_id = content["note_id"]
             title = content["title"]
             desc = content["desc"]
             
+            # 分割帖子
+            output_lines.append(f"<blog {idx}>")
             # 写标题
-            output_lines.append(f"标题：{title}")
+            output_lines.append(f"<title>{title}</title>")
             
             # 写内容
-            output_lines.append("内容：")
+            output_lines.append("<content>")
             output_lines.append(f"{desc}")
+            output_lines.append("</content>")
             
             # 写评论
-            output_lines.append("评论：")
+            output_lines.append("<comment>")
             if note_id in comments_by_note_id:
                 for comment in comments_by_note_id[note_id]:
                     output_lines.append(comment)
-            else:
-                output_lines.append("暂无评论")
+            output_lines.append("</comment>")
             
             # 写OCR识别结果
-            output_lines.append("OCR识别结果：")
+            output_lines.append("<ocr>")
             note_folder_path = os.path.join(images_folder_path, note_id)
             if os.path.exists(note_folder_path):
                 for txt_file in os.listdir(note_folder_path):
@@ -164,11 +123,11 @@ def search(keyword: str) -> list[str]:
                         with open(txt_file_path, 'r', encoding='utf-8') as tf:
                             ocr_content = tf.read()
                             output_lines.append(ocr_content)
-            else:
-                output_lines.append("暂无OCR识别结果")
+            output_lines.append("</ocr>")
             
             # 添加分隔符
-            output_lines.append("\n" + "="*50 + "\n")
+            output_lines.append(f"</blog {idx}>")
+            output_lines.append("\n" + "="*70 + "\n")
         
         # 将所有内容写入文件并返回字符串
         with open(output_txt_path, 'w', encoding='utf-8') as output_file:
@@ -185,11 +144,21 @@ def search(keyword: str) -> list[str]:
     
     except subprocess.CalledProcessError as e:
         # 捕获错误并返回错误信息
-        return f"Error: {e.stderr.strip()}"
+        if hasattr(e, 'stderr') and e.stderr:
+            return f"Error: {e.stderr.strip()}"
+        else:
+            return f"Error: Command failed with exit code {e.returncode}"
     except FileNotFoundError as e:
         return f"Error: File not found - {e}"
     except json.JSONDecodeError as e:
         return f"Error: Failed to decode JSON - {e}"
+    except OSError as e:
+        if IS_WINDOWS and 'shm.dll' in str(e):
+            # 使用伪搜索结果代替
+            print("PyTorch DLL error detected, using pseudo search results instead.")
+            return pesudo_crawl(keyword)
+        else:
+            return f"Error: OS Error - {e}"
     
 
 
@@ -207,4 +176,70 @@ def search(keyword: str) -> list[str]:
 # print(f"finish: cost {time1-time0: .2f} seconds")
 # print(result) # 理想情况是List[str]
 # print("length of output:",len(result))
+
+
+SEARCH_INFORMATION_PROMPT = """
+你要假装成为一个搜索引擎。根据用户给定的关键词，你需要：
+1. 根据关键词编撰出一篇推文
+2. 确保信息与用户的关键词相关
+3. 推文中应当包含具体的细节，每次回答的结果相互独立
+
+请直接进行输出：
+"""
+
+SAMPLE_INPUT = """
+厦门旅游
+"""
+
+SAMPLE_OUTPUT = """
+刚从厦门回来，整理了这份非典型游客指南。和先生带5岁娃的亲子游，全程公共交通，日均步数1.2万，适合喜欢深度体验的家庭参考：
+
+🌇 ​​行程安排​​
+Day1：沙坡尾艺术街区→顶澳仔猫街→钟鼓索道
+
+10:00 沙坡尾旧厂房改造的艺术空间（免费）
+推荐「反正」咖啡馆三楼露台，低消38元/人可拍双子塔全景
+15:00 猫街博物馆二楼有20+猫咪常驻，孩子撸猫超开心
+17:00 钟鼓索道建议选日落时段（提前3天预约）
+Day2：鼓浪屿→八市海鲜市场
+
+8:30 厦鼓码头→三丘田码头（35元/人）
+重点走笔山路-鸡山路小众路线，避开旅行团人潮
+14:00 龙山洞出口的「褚家园」老别墅咖啡值得停留
+19:00 八市买海鲜加工推荐「阿玉」店，膏蟹75元/斤+15元加工费
+Day3：环岛路骑行→黄厝海滩
+
+租亲子电动车80元/天（曾厝垵站3号出口）
+椰风寨到黄厝段人少景美，每隔1km有休息站
+海滩挖沙工具租赁10元/套，建议自备防晒帽
+🍜 ​​美食实测​​
+▶ 四里沙茶面（湖滨店）：经典套餐22元，汤头浓郁
+▶ 佳味再添小吃店：芋包5元/个，搭配甜辣酱很特别
+▶ 思北花生汤：加蛋版本9元，温热清甜作夜宵刚好
+
+⚠️ ​​避坑提醒​​
+
+出租车司机推荐的「海上看金门」项目性价比低（198元/人，全程40分钟）
+鼓浪屿上的「珍珠开蚌」体验店多为人工养殖珠
+曾厝垵夜市同质化严重，更推荐去老城区开元路
+这次总花费约3200元（两大一小），含高铁往返和民宿费用。大家觉得厦门哪个景点最值得二刷？求推荐其他小众玩法！
+
+#厦门亲子游 #鼓浪屿攻略 #城市慢旅行
+"""
+
+def pesudo_crawl(keyword: str) -> List[Dict[str, Any]]:
+    """
+    使用大语言模型来伪装搜索引擎的搜索结果，用于测试时使用
+    """
+    llm = base_llm()
+    messages = [
+        SystemMessage(content=SEARCH_INFORMATION_PROMPT),
+        HumanMessage(content=SAMPLE_INPUT),
+        AIMessage(content=SAMPLE_OUTPUT),
+        HumanMessage(content=keyword)
+    ]
+    result = llm.invoke(messages).content
+    return [result]
+
+
 

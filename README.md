@@ -1,31 +1,61 @@
-# TailorTrip项目代码
-- requirements.txt: 依赖包安装（python3.12+）
-- 还要pip install: langchain-openai, langchain-deepseek
-- 由于python引用的特性，需要运行代码请在最外层目录下写entry point，通过package调用内部层级的代码进行运行
+# TailorTrip - 智能旅行规划助手
 
-## 目录结构
-- config: 存放着配置文件
-    - *使用yaml来在各个代码文件间共享环境变量*
-- data: 数据文件夹
-- interface：存放前端界面文件
-- src: 源代码文件夹
-    - llm_agent: 
-        - *agent本身存放的文件夹，每个agent来执行一个特定的任务*
-        - prompt：用来存放各个agent的system prompt
-        - sample_chatbot：写了一些如何调用llm的示例代码（cot，toolcall, streaming）
-        - user_intention（to be filled）：读取user的意图，修正query并返回扩充后的回答和flag
-    - rag db:
-        - *rag数据库存放的文件夹，用于存储和检索文档*
-    - tools:
-        - *llm tool存放的文件夹，用于存放和管理工具*
-        - retrieve（to be filled）：通过rag获取文档
-        - crawl（to be filled）：通过爬虫获取相关帖子信息
-    - utils:
-        - *共用工具代码存放的文件夹*
-        - llm：调用llm通过这里进行即可
-        - util：存放一些共用的工具代码，例如导入config，logging等等
-- run_sample.py: 运行示例代码的entry_point
+TailorTrip是一个基于LLM的智能旅行规划助手，能够根据用户的需求和偏好，自动生成个性化的旅行建议。
 
-# TODO List
-- [ ] 目前是从单一的初始关键词开始直接构建tree，应该先看过几篇宏观的攻略，针对宏观攻略提到的几个地点作为子树的root再进行搜索。
-- [ ] extract keywords的prompt，以及stopping criteria需要优化，目前会不择手段地提取具体化的关键词，而强行忽略中间层的元素
+## 主要功能
+
+- 🔍 递归搜索：从用户描述出发，通过递归方式不断细化搜索关键词
+- 🌐 信息抽取：从小红书等平台获取真实旅游信息
+- 🎯 智能规划：根据搜索结果生成个性化旅行建议
+- 🤖 对话交互：支持自然语言交互，理解用户意图
+
+## 快速开始
+
+### 环境要求
+- Python 3.12+
+- 依赖包：见requirements.txt（懒人安装requirements_solid.txt，钉死版本能运行）
+- 额外依赖：`pip install langchain-openai langchain-deepseek`
+
+### 运行说明
+1. 复制`config/config.example.yaml`为`config/config.yaml`并填写配置
+2. 在项目根目录下运行示例：`python run_sample.py`
+
+## 项目结构
+
+```
+TailorTrip/
+├── config/                # 配置文件
+│   ├── config.yaml       # 环境变量配置
+│   └── config.example.yaml
+├── src/
+│   ├── llm_agent/       # LLM智能代理
+│   │   ├── content_generation/  # 内容生成模块
+│   │   ├── sample/      # 示例代码
+│   │   └── user_intention/  # 用户意图理解
+│   ├── tools/           # 工具函数
+│   │   ├── crawl.py     # 爬虫工具
+│   │   └── retriever.py # 文档检索
+│   └── utils/           # 通用工具
+│       ├── llm.py       # LLM调用封装
+│       └── util.py      # 通用工具函数
+└── requirements.txt
+```
+
+## 开发状态
+
+### 功能列表
+- [x] 基于树结构的递归搜索框架
+- [x] 小红书爬虫集成
+- [x] 基础的LLM调用封装
+- [x] 示例代码和文档
+- [ ] 优化搜索策略：先获取宏观攻略，再针对具体地点深入搜索
+- [ ] 改进关键词提取：优化prompt和stopping criteria
+- [ ] 完善用户意图理解模块
+- [ ] 集成RAG检索功能
+
+## 贡献指南
+
+1. 所有代码请在项目根目录下创建entry point
+2. 通过package方式调用内部模块
+3. 遵循代码注释规范，保持中文注释的一致性
+4. 新功能开发请先在`sample`目录下测试

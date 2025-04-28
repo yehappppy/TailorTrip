@@ -1,7 +1,6 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.utils.llm import base_llm, cot_llm
-from src.tools.retrieve import retrieve
 from src.tools.calculate import add, minus, divide, multiply
 
 SYS_PROMPT_CHAT = """

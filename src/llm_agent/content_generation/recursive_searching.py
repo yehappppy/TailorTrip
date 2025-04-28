@@ -2,30 +2,26 @@ from typing import List, Dict, Any, Optional
 import json
 
 from src.utils.util import get_logger
-from src.tools.crawl import search_information
+from src.tools import crawl
 from src.utils.llm import base_llm, cot_llm
 from src.llm_agent.content_generation.tree import SearchNode, SearchTree
 from src.llm_agent.content_generation.prompt import (
-    get_keyword_generation_messages,
     get_keyword_extraction_messages,
     get_result_evaluation_messages,
     get_final_response_messages
 )
+from src.llm_agent.content_generation.planning import generate_initial_keyword
+
+"""
+[用户描述] -> [搜索关键词] -> [搜索结果] -> [评估] -否，则返回搜索关键词步骤-> [生成最终回答]
+
+[用户描述] -> [初次搜索关键词] -> [搜索概览帖子] -> [计划，并生成细化搜索关键词]
+-> [搜索结果] -> [评估] -否，则返回搜索关键词步骤-> [生成最终回答]
+
+"""
 
 # 获取日志记录器
 logger = get_logger("recursive_searching")
-
-
-def generate_initial_keyword(user_description: str) -> str:
-    """根据用户描述生成初始搜索关键词"""
-    logger.info("生成初始搜索关键词")
-    llm = base_llm()
-    messages = get_keyword_generation_messages(user_description)
-    response = llm.invoke(messages)
-    keyword = response.content.strip()
-    logger.info(f"生成的初始关键词: {keyword}")
-    return keyword
-
 
 def is_specific_location(search_result: str) -> bool:
     """判断搜索结果是否包含关于特定地点的信息"""
@@ -36,7 +32,6 @@ def is_specific_location(search_result: str) -> bool:
     result = response.content.strip().lower() in ["yes", "是"]
     logger.info(f"评估结果: {'是特定地点' if result else '不是特定地点'}")
     return result
-
 
 def generate_final_response(tree: SearchTree, user_input: str) -> str:
     """根据搜索树和用户原始输入生成最终的综合回答
@@ -69,19 +64,6 @@ def extract_keywords(search_result: str) -> List[str]:
     return keywords
 
 
-def search_with_keyword(keyword: str) -> str:
-    """使用给定关键词，调用搜索引擎执行搜索"""
-    logger.info(f"使用关键词搜索: {keyword}")
-    results = search_information(keyword)
-    if results and isinstance(results, list) and len(results) > 0:
-        # 如果返回多个结果，只返回第一个
-        result = results[0] if isinstance(results[0], str) else results[0]
-        logger.debug(f"搜索结果: {result[:100]}...")  # 只记录前100个字符
-        return result
-    logger.warning(f"关键词 '{keyword}' 没有返回搜索结果")
-    return ""
-
-
 def build_search_tree(keyword: str, current_depth: int, max_depth: int) -> SearchNode:
     """递归构建搜索树
     
@@ -95,9 +77,15 @@ def build_search_tree(keyword: str, current_depth: int, max_depth: int) -> Searc
     """
     logger.info(f"构建搜索树，深度: {current_depth}/{max_depth}，关键词: {keyword}")
     
-    # 执行搜索
-    search_result = search_with_keyword(keyword)
-    
+        # 执行搜索
+    results = crawl(keyword)
+    if results and isinstance(results, list) and len(results) > 0:
+        search_result = results[0] if isinstance(results[0], str) else results[0]
+        logger.debug(f"搜索结果: {str(search_result)[:100]}...")  # 只记录前100字符
+    else:
+        logger.warning(f"关键词 '{keyword}' 没有返回搜索结果")
+        search_result = ""
+
     # 判断是否包含具体地点信息
     is_specific = is_specific_location(search_result)
     

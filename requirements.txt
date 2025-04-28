@@ -1,25 +1,52 @@
-langchain
-langchain_openai
-langchain_deepseek
-langchain_community
-langchain_huggingface
-sentence_transformers
-openai
-numpy
-pandas
-python-dotenv
-fastapi
-uvicorn
-streamlit
-scikit-learn
-textblob
-beautifulsoup4
-transformers
-googlemaps
-faiss-cpu
-pyyaml
-loguru
-elasticsearch
-torch
-torchvision
-torchaudio
+# TailorTrip项目依赖
+# 合并了主项目和MediaCrawler的依赖
+
+# 数据处理
+numpy>=1.24.0
+pandas>=2.0.0
+pydantic>=2.0.0
+pyyaml>=6.0.0
+
+# 文本处理
+jieba==0.42.1
+parsel>=1.8.0
+pyexecjs>=1.5.0
+
+# 图像处理
+Pillow>=9.0.0
+opencv-python>=4.7.0
+wordcloud>=1.9.0
+matplotlib>=3.7.0
+paddleocr>=2.6.0
+paddlepaddle>=3.0.0
+
+# LLM相关依赖
+langchain>=0.0.267
+langchain_core>=0.1.46
+langchain_openai>=0.0.2
+langchain_deepseek>=0.0.1
+langchain_community>=0.0.10
+langchain_huggingface>=0.0.2
+openai>=1.1.0
+
+# 向量数据库和搜索
+sentence_transformers>=2.2.0
+faiss-cpu>=1.7.0
+
+# 网络和API
+fastapi>=0.115.2
+uvicorn>=0.22.0
+starlette>=0.40.0
+httpx>=0.24.0
+requests>=2.30.0
+python-dotenv>=1.0.0
+aiofiles>=23.1.0
+aiomysql>=0.1.1
+redis>=4.5.0
+
+# 浏览器自动化
+playwright>=1.30.0
+tenacity>=8.0.0
+
+# 其他工具
+loguru>=0.7.0

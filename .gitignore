@@ -7,3 +7,12 @@ logs/
 # Ignore Python cache files and directories
 __pycache__/
 *.pyc
+
+# Ignore all library content
+src/library/
+*/library/
+
+# 忽略所有browser_data文件夹
+**/browser_data/
+browser_data/
+*/browser_data/
