@@ -50,3 +50,4 @@ tenacity>=8.0.0
 
 # 其他工具
 loguru>=0.7.0
+uuid==1.30

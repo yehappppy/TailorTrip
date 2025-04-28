@@ -3,7 +3,6 @@ __date__ = "2025-04-24"
 __description__ = "Initialize or expand the RAG vector database"
 
 import os
-import json
 import torch
 import logging
 import asyncio
@@ -38,7 +37,7 @@ class VectorDB:
         else:
             self.db = None
     
-    async def initialize(self, chunked_docs: Optional[List[Document]] = None, new_sources: Optional[set] = None):
+    async def initialize(self, chunked_docs: Optional[List[Document]] = None):
         # Synchronize index build status
         self.index_built_event = asyncio.Event()
         
@@ -50,14 +49,14 @@ class VectorDB:
             if not chunked_docs:
                 logger.error("No documents provided for index building")
                 raise ValueError("No documents provided for index building")
-            asyncio.create_task(self._build_index_async(chunked_docs, new_sources))
+            await self._build_index_async(chunked_docs)
         else:
             logger.info("Loading existing FAISS index")
             self.index_built_event.set()
             if chunked_docs:
-                asyncio.create_task(self._add_documents_async(chunked_docs, new_sources))
+                asyncio.create_task(self._add_documents_async(chunked_docs))
 
-    async def _build_index_async(self, chunked_docs: Optional[List[Document]], new_sources: Optional[set]):
+    async def _build_index_async(self, chunked_docs: Optional[List[Document]]):
         """Asynchronous construction of FAISS indexes"""
         try:
             logger.info("Start building FAISS indexes asynchronously")
@@ -65,7 +64,6 @@ class VectorDB:
             self.db = await loop.run_in_executor(None, FAISS.from_documents, chunked_docs or [], self.embeddings)
             logger.info("FAISS index construction completed")
             logger.info(f"Embedded {len(chunked_docs)} documents to FAISS index")
-            await self._update_existing_sources(new_sources)
             await self._save_index()
         except Exception as e:
             logger.error(f"Failed to build FAISS index: {e}")
@@ -73,45 +71,26 @@ class VectorDB:
         finally:
             self.index_built_event.set()
             
-    async def _add_documents_async(self, chunked_docs: List[Document], new_sources: Optional[set]):
+    async def _add_documents_async(self, chunked_docs: List[Document]):
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self.db.add_documents, chunked_docs)
         logger.info(f"Embedded {len(chunked_docs)} documents to FAISS index")
-        await self._update_existing_sources(new_sources)
         await self._save_index()
-
-    async def _update_existing_sources(self, new_sources: Optional[set] = None):
-            existing_sources_path = os.path.join(self.config['vector_db_path'], 'existing_sources_rag.json')
-            try:
-                with open(existing_sources_path, 'r', encoding='utf-8') as f:
-                    existing_sources = set(json.load(f))
-            except:
-                existing_sources = set()
-            if new_sources:
-                try:
-                    updated_sources = existing_sources.union(new_sources)
-                    await self._write_json_async(existing_sources_path, list(updated_sources))
-                    logger.info(f"Updated processed sources file with {len(new_sources)} new entries")
-                except Exception as e:
-                    logger.error(f"Failed to update processed sources: {str(e)}")
-    
-    async def _write_json_async(self, file_path: str, data):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, self._write_json_sync, file_path, data)
-
-    def _write_json_sync(self, file_path: str, data):
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     async def _save_index(self):
         """Prevent concurrent saves"""
         async with self._save_lock:
             await asyncio.get_event_loop().run_in_executor(None, self.db.save_local, self.persist_dir)
 
-    async def to_tool(self):
+    async def to_retriever(self):
         """Convert the vector database to tool state"""
         self.index_built_event = asyncio.Event()
         self.index_built_event.set()
+        retriever = self.db.as_retriever(
+            search_type = self.config["search_type"], 
+            search_kwargs = {"k": self.config["k"], "lambda_mult": self.config["lambda_mult"]}
+        )
+        return retriever
 
     async def search(self, query: str, k: int) -> List[Dict]:
         """Perform a FAISS Semantic Search"""

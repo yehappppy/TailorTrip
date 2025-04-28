@@ -37,11 +37,18 @@ application_settings:
 
 database_configuration:
   docs_path: ./data/docs
+  es_db_url: http://localhost:9200/
+  es_db_usr: elastic
+  es_db_pwd: 4AWa7iHgd/X:qdw&
+  es_db_index: es_index
+  es_db_local: data/esdata
   vector_db_path: ./data/vector_db
-  es_db_path: ./data/es
   embedding_model: "intfloat/multilingual-e5-large-instruct"
   embedding_type: "sentence_transformer"
   chunk_size: 1024
   chunk_overlap: 256
-  fuzzy_k: 1000
-  semantic_k: 5
+  search_type: mmr
+  lambda_mult: 0.25
+  k: 5
+  weights: [0.3, 0.7]
+  
