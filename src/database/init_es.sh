@@ -17,7 +17,7 @@ if [ "$(docker ps -aq -f name=^/elasticsearch$)" ]; then
   # Wait until the container are started
   while true; do
     #  Attempt to request index information using curl (returned 200 for success)
-    response=$(curl -u "$es_db_usr:$es_db_pwd" -s -o /dev/null -w "%{http_code}" "http://localhost:9200/_cat/indices?v")
+    response=$(curl -k -u "$es_db_usr:$es_db_pwd" -s -o /dev/null -w "%{http_code}" "https://localhost:9200/_cat/indices?v")
     if [ "$response" -eq 200 ]; then
       echo "Elasticsearch has started successfully!"
       break

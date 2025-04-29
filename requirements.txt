@@ -29,6 +29,9 @@ langchain_community>=0.0.10
 langchain_huggingface>=0.0.2
 openai>=1.1.0
 
+# Elasticsearch数据库
+elasticsearch>=8.8.0
+
 # 向量数据库和搜索
 sentence_transformers>=2.2.0
 faiss-cpu>=1.7.0

@@ -59,3 +59,11 @@ TailorTrip/
 2. 通过package方式调用内部模块
 3. 遵循代码注释规范，保持中文注释的一致性
 4. 新功能开发请先在`sample`目录下测试
+
+## 关于Elasticsearch和Docker容器
+
+1. 下载 [docker desktop](https://docs.docker.com/get-started/get-docker/)
+2. 打开 docker desktop
+3. 请把爬虫的测试数据放在 [data/docs](data/docs)路径下
+4. 示例：运行 [test_retriever.py](test_retriever.py)
+5. 现在就可以正常构建elasticsearch容器和使用elasticsearch服务了

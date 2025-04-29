@@ -23,15 +23,15 @@ async def main():
     print(len(results))
     print(results)
     
-    # results = await SemanticSearch.ainvoke(query)
-    # print(f"{'-' * 10} SemanticSearch {'-' * 10}")
-    # print(len(results))
-    # print(results)
-# 
-    # results = await EssembleSearch.arun(query)
-    # print(f"{'-' * 10} EssembleSearch {'-' * 10}")
-    # print(len(results))
-    # print(results)
+    results = await SemanticSearch.ainvoke(query)
+    print(f"{'-' * 10} SemanticSearch {'-' * 10}")
+    print(len(results))
+    print(results)
+
+    results = await EssembleSearch.arun(query)
+    print(f"{'-' * 10} EssembleSearch {'-' * 10}")
+    print(len(results))
+    print(results)
 
 if __name__ == '__main__':
     asyncio.run(main())
