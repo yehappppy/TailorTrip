@@ -19,7 +19,7 @@ import requests
 import base64
 import os, sys
 from typing import Dict
-from paddleocr import PaddleOCR
+
 # 获取当前文件的目录
 current_dir = os.path.dirname(os.path.abspath(__file__))  # 当前是 xhs_store_image.py 所在目录
 media_crawler_dir = os.path.abspath(os.path.join(current_dir, "../../")) # MediaCrawler 目录的路径
@@ -38,7 +38,7 @@ import src.library.MediaCrawler.config as config
 class XiaoHongShuImage(AbstractStoreImage):
     # image_store_path: str = "data/xhs/images"
     image_store_path: str = os.path.join(media_crawler_dir, r"data\xhs\images")
-    ocr = PaddleOCR()  # Initialize OCR model once for the class
+    
     async def store_image(self, image_content_item: Dict):
         """
         store content
