@@ -108,7 +108,8 @@ TailorTrip/
 ## 关于Elasticsearch和Docker容器
 
 1. 下载 [docker desktop](https://docs.docker.com/get-started/get-docker/)
-2. 打开 docker desktop
+2. 打开 docker desktop (不要自己构建docker容器)
 3. 请把爬虫的测试数据放在 [data/docs](data/docs)路径下
 4. 示例：运行 [test_retriever.py](test_retriever.py)
 5. 现在就可以正常构建elasticsearch容器和使用elasticsearch服务了
+   
