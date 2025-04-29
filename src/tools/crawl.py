@@ -143,12 +143,15 @@ def crawl(keyword: str) -> list[str]:
         # 生成最终文本内容
         output_lines = []
         for idx, content in enumerate(filtered_contents):
+            note_url = content["note_url"]
             note_id = content["note_id"]
             title = content["title"]
             desc = content["desc"]
             process_desc = process_text(desc)
             # 分割帖子
             output_lines.append(f"<blog {idx}>")
+            # 写link
+            output_lines.append(f"<link>{note_url}</link>")
             # 写标题
             process_title = process_text(title)
             # output_lines.append(f"<title>{title}</title>")
@@ -169,10 +172,24 @@ def crawl(keyword: str) -> list[str]:
                     output_lines.append(process_comment)
             output_lines.append("</comment>")
             
-            # 写OCR识别结果
-            output_lines.append("<ocr>")
+            # 写OCR识别结果(若ocr文本路径存在)
+
+            # output_lines.append("<ocr>")
+            # note_folder_path = os.path.join(images_folder_path, note_id)
+            # if os.path.exists(note_folder_path):
+            #     for txt_file in os.listdir(note_folder_path):
+            #         if txt_file.endswith(".txt"):
+            #             txt_file_path = os.path.join(note_folder_path, txt_file)
+            #             with open(txt_file_path, 'r', encoding='utf-8') as tf:
+            #                 ocr_content = tf.read()
+            #                 process_ocr = process_text(ocr_content)
+            #                 output_lines.append(process_ocr)
+                            
+            # output_lines.append("</ocr>")
+
             note_folder_path = os.path.join(images_folder_path, note_id)
-            if os.path.exists(note_folder_path):
+            if os.path.exists(note_folder_path):  # 只有在路径存在时才执行以下逻辑
+                output_lines.append("<ocr>")
                 for txt_file in os.listdir(note_folder_path):
                     if txt_file.endswith(".txt"):
                         txt_file_path = os.path.join(note_folder_path, txt_file)
@@ -180,8 +197,7 @@ def crawl(keyword: str) -> list[str]:
                             ocr_content = tf.read()
                             process_ocr = process_text(ocr_content)
                             output_lines.append(process_ocr)
-                            
-            output_lines.append("</ocr>")
+                output_lines.append("</ocr>")
             
             # 添加分隔符
             output_lines.append(f"</blog {idx}>")
