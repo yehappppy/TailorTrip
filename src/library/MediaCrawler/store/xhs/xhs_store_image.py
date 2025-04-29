@@ -96,9 +96,14 @@ class XiaoHongShuImage(AbstractStoreImage):
             await f.write(pic_content)
             utils.logger.info(f"[XiaoHongShuImageStoreImplement.save_image] save image {save_file_name} success ...")
             
-        # Perform OCR on the saved image, and save the text
+        # Perform OCR on the saved image if needed, and save the text
         # time1=time.time()
-        await self.perform_ocr(save_file_name)
+        # await self.perform_ocr(save_file_name)
+    
+        if config.USE_OCR == True:
+            await self.perform_ocr(save_file_name)
+
+    
         # time2=time.time()
         # print(f"cost {time2-time1} seconds to perform OCR")
 
