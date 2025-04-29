@@ -21,6 +21,7 @@ emoji
 
 # LLM相关依赖
 langchain>=0.0.267
+langgraph
 langchain_core>=0.1.46
 langchain_openai>=0.0.2
 langchain_deepseek>=0.0.1

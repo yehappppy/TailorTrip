@@ -284,7 +284,7 @@ Day3：环岛路骑行→黄厝海滩
 
 #厦门亲子游 #鼓浪屿攻略 #城市慢旅行
 """
-
+@tool
 def pesudo_crawl(keyword: str) -> List[Dict[str, Any]]:
     """
     使用大语言模型来伪装搜索引擎的搜索结果，用于测试时使用
