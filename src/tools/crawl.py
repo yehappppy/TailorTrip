@@ -11,8 +11,59 @@ import platform
 
 from src.utils.llm import base_llm
 
+import re
+import emoji
+import string
+from opencc import OpenCC
+
 # Check if we're on Windows
 IS_WINDOWS = platform.system() == 'Windows'
+
+
+def process_text(text):
+    """
+    Cleans social media text by performing the following:
+    - Remove HTML tags
+    - Remove URLs
+    - Remove punctuation (but keep hashtags)
+    - Convert to lowercase
+    - Remove stopwords
+    - Remove extra whitespace
+    - Remove emojis
+    - Convert Traditional Chinese to Simplified Chinese
+
+    Args:
+        text (str): The input text to clean.
+
+    Returns:
+        str: The cleaned text.
+    """
+    # Initialize OpenCC for Traditional to Simplified Chinese conversion
+    cc = OpenCC('t2s')
+
+    # Remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
+    
+    # Remove URLs
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # Remove punctuation but keep hashtags
+    text = re.sub(rf"[{re.escape(string.punctuation.replace('#', ''))}]", '', text)
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove emojis
+    text = emoji.replace_emoji(text, replace='')  # Replace emojis with an empty string
+    
+    # Convert Traditional Chinese to Simplified Chinese
+    text = cc.convert(text)
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
 
 def crawl(keyword: str) -> list[str]: 
     """
@@ -95,22 +146,27 @@ def crawl(keyword: str) -> list[str]:
             note_id = content["note_id"]
             title = content["title"]
             desc = content["desc"]
-            
+            process_desc = process_text(desc)
             # 分割帖子
             output_lines.append(f"<blog {idx}>")
             # 写标题
-            output_lines.append(f"<title>{title}</title>")
+            process_title = process_text(title)
+            # output_lines.append(f"<title>{title}</title>")
+            output_lines.append(f"<title>{process_title}</title>")
             
             # 写内容
             output_lines.append("<content>")
-            output_lines.append(f"{desc}")
+            # output_lines.append(f"{desc}")
+            output_lines.append(f"{process_desc}") # 清洗后的数据
             output_lines.append("</content>")
             
             # 写评论
             output_lines.append("<comment>")
             if note_id in comments_by_note_id:
                 for comment in comments_by_note_id[note_id]:
-                    output_lines.append(comment)
+                    process_comment = process_text(comment)
+                    # output_lines.append(comment)
+                    output_lines.append(process_comment)
             output_lines.append("</comment>")
             
             # 写OCR识别结果
@@ -122,7 +178,9 @@ def crawl(keyword: str) -> list[str]:
                         txt_file_path = os.path.join(note_folder_path, txt_file)
                         with open(txt_file_path, 'r', encoding='utf-8') as tf:
                             ocr_content = tf.read()
-                            output_lines.append(ocr_content)
+                            process_ocr = process_text(ocr_content)
+                            output_lines.append(process_ocr)
+                            
             output_lines.append("</ocr>")
             
             # 添加分隔符
@@ -138,7 +196,7 @@ def crawl(keyword: str) -> list[str]:
         #     text = file.read()
 
         # 按分隔符拆分
-        posts = str_out.split("="*50)[:-1] # 删除列表最后一个元素（没有用，一个换行符）
+        posts = str_out.split("="*70)[:-1] # 删除列表最后一个元素（没有用，一个换行符）
         # return "\n".join(output_lines)
         return posts # a list of strings
     
@@ -171,7 +229,7 @@ def crawl(keyword: str) -> list[str]:
 # import src.library.MediaCrawler.config as config
 # print("config.keywords:",config.KEYWORDS)
 # time0=time.time()
-# result = search(config.KEYWORDS)  
+# result = crawl(config.KEYWORDS)  
 # time1=time.time()
 # print(f"finish: cost {time1-time0: .2f} seconds")
 # print(result) # 理想情况是List[str]

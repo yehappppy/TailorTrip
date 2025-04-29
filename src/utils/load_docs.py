@@ -1,16 +1,23 @@
 import os
 import json
+import uuid
 import logging
+from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-def load_docs(docs_path: str, chunk_size: int, chunk_overlap: int, existing_sources_path: Optional[str] = None):
-    docs = []
-    metadata = []
+def load_docs(docs_path: str, chunk_size: int, chunk_overlap: int):
+    chunked_docs = []
     new_sources = set()
+    splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
+    # Create directory if not exists
+    existing_sources_dir = os.path.join(docs_path, "history")
+    if not os.path.exists(existing_sources_dir):
+        os.mkdir(existing_sources_dir)
+    existing_sources_path = os.path.join(existing_sources_dir, 'existing_sources.json')
+    
     # Load existing sources
     existing_sources = set()
     if existing_sources_path and os.path.exists(existing_sources_path):
@@ -29,20 +36,18 @@ def load_docs(docs_path: str, chunk_size: int, chunk_overlap: int, existing_sour
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
-                    docs.append(content)
-                    metadata.append({"source": file_path})
+                    for text in splitter.split_text(content):
+                        chunked_docs.append(
+                            Document(id=str(uuid.uuid4()), page_content=text, metadata={"source": file_path})
+                        )
                     new_sources.add(file_path)
                     logger.info(f"Loaded new document: {file_path}")
             except Exception as e:
                 logger.error(f"Failed to load {file_path}: {str(e)}")
                 continue
 
-    if not docs:
+    if not new_sources:
         logger.warning("No new documents to load after deduplication")
-        return None, None, None
-
-    splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    chunked_texts = [text for doc in docs for text in splitter.split_text(doc)]
-    chunked_docs = splitter.create_documents(docs, metadata)
-
-    return chunked_texts, chunked_docs, new_sources
+        return None, None
+    
+    return chunked_docs, new_sources
