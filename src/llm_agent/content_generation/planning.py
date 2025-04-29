@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 import json
 
 from src.utils.util import get_logger, structure_output
-from src.utils.llm import base_llm, cot_llm
+from src.utils.llm import base_llm, cot_llm, fast_llm
 from src.tools import crawl
 from src.llm_agent.content_generation.prompt import (
     get_keyword_generation_messages,
@@ -15,7 +15,7 @@ logger = get_logger("planning")
 def generate_initial_keyword(user_description: str) -> str:
     """根据用户描述生成初始搜索关键词"""
     logger.info("生成初始搜索关键词")
-    llm = base_llm()
+    llm = fast_llm()
     messages = get_keyword_generation_messages(user_description)
     response = llm.invoke(messages)
     keyword = response.content.strip()
@@ -30,7 +30,6 @@ def generate_search_plan(overview: str) -> Dict[str, Any]:
         
     Returns:
         Dict[str, Any]: 包含以下键的字典：
-            - "thinking_process": 规划思路说明
             - "search_plan": 进行搜索获取信息的计划
             - "keywords": 所有需要搜索的关键词列表
     """
@@ -83,6 +82,7 @@ def planning(user_description: str) -> Dict[str, Any]:
     
     # 步骤2：用keyword调用crawl.py中的crawl进行搜索
     search_result = crawl(keyword)[0]
+    print(search_result)
     
     # 步骤3：生成详细的搜索计划
     plan_data = generate_search_plan(search_result)

@@ -1,6 +1,6 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.utils.llm import base_llm, cot_llm
+from src.utils.llm import base_llm, cot_llm, fast_llm
 from src.tools.calculate import add, minus, divide, multiply
 
 SYS_PROMPT_CHAT = """
@@ -33,6 +33,15 @@ def run_with_tools(query):
 
 def run_with_thinking(query):
     llm = cot_llm()
+    messages = [
+        SystemMessage(content=SYS_PROMPT_RETRIEVER),
+        HumanMessage(content=query)
+    ]
+    response = llm.invoke(messages)
+    return response
+
+def run_with_fast(query):
+    llm = fast_llm()
     messages = [
         SystemMessage(content=SYS_PROMPT_RETRIEVER),
         HumanMessage(content=query)

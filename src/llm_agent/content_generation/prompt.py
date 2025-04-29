@@ -104,7 +104,6 @@ PLANNING_PROMPT = """
 3. 为每个需要深入了解的项目生成精确的搜索关键词
 
 以json作为输出格式，包含以下字段：
-- thinking_process: 规划思路说明
 - search_plan: 进行搜索获取信息的计划
 - keywords: 计划中所有需要搜索的关键词列表
 """

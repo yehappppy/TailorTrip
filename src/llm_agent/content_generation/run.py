@@ -23,12 +23,14 @@ def generate_travel_plan(user_description: str, max_depth: int = 3) -> Dict[str,
     logger.info(f"开始为用户生成旅行计划，输入描述：{user_description}")
     
     # 步骤1：生成详细的搜索计划
-    # search_plan = planning(user_description)
+    search_plan = planning(user_description)
+
+    print(search_plan)
     
     logger.info(f"搜索计划生成完毕，开始细节搜索")
 
     # 步骤2：执行递归搜索
-    search_result = recursive_searching(user_description, max_depth)
+    # search_result = recursive_searching(user_description, max_depth)
     
     logger.info(f"细节搜索完成，开始生成最终回答")
 
