@@ -17,8 +17,7 @@ Pillow>=9.0.0
 opencv-python>=4.7.0
 wordcloud>=1.9.0
 matplotlib>=3.7.0
-paddleocr>=2.6.0
-paddlepaddle>=3.0.0
+
 
 # LLM相关依赖
 langchain>=0.0.267
