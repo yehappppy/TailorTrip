@@ -4,7 +4,7 @@ from langchain_deepseek import ChatDeepSeek
 
 from .util import load_config
 
-config = load_config()["llm_configuration"]
+config = load_config()["llm_config"]
 
 def base_llm():
     # in most of time using ChatOpenAI as standard llm invoker

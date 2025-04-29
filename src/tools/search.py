@@ -14,8 +14,6 @@ from langchain_core.runnables import RunnableConfig
 
 class AsyncBM25Retriever(BaseRetriever):
     client: Any
-    search_field: str
-    content_field: str
 
     async def _get_relevant_documents(self, query: str, *, config: Optional[RunnableConfig] = None, **kwargs) -> List[Document]:
         config = self.client.config
@@ -24,18 +22,17 @@ class AsyncBM25Retriever(BaseRetriever):
             body={
                 "query": {
                     "match": {
-                        self.search_field: query
+                        "page_content": query
                     }
                 },
-                "size": config["k"],
-                "_source": [self.content_field, "metadata"]
+                "size": config["k"]
             }
         )
         return [
             Document(
                 id=hit["_id"],
-                page_content=hit["_source"][self.content_field],
-                metadata=hit["_source"].get("metadata", {})
+                page_content=hit["_source"]["page_content"],
+                metadata=hit["_source"]["metadata"]
             )
             for hit in response["hits"]["hits"]
         ]
@@ -43,7 +40,7 @@ class AsyncBM25Retriever(BaseRetriever):
     async def ainvoke(self, input: str, config: Optional[RunnableConfig] = None, **kwargs) -> List[Document]:
         return await self._get_relevant_documents(input, config=config, **kwargs)
 
-config = load_config()["database_configuration"]
+config = load_config()["db_config"]
 _, FAISS = asyncio.run(init_db())
 SemanticRetriever = asyncio.run(FAISS.to_retriever())
 
@@ -57,11 +54,7 @@ async def FuzzySearch(query: str):
         List of relevant Documents.
     """
     async with ElasticSearch(config) as es_client:
-        FuzzyRetriever = AsyncBM25Retriever(
-            client=es_client, 
-            search_field="content", 
-            content_field="content"
-        )
+        FuzzyRetriever = AsyncBM25Retriever(client=es_client)
         return await FuzzyRetriever.ainvoke(query)
 
 @tool

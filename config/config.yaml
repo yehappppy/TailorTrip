@@ -1,6 +1,6 @@
-llm_configuration:
+llm_config:
   llm_base_url: https://api.siliconflow.cn/v1/
-  llm_api_key: "sk-rkaaajuldwebwppljkefybgzhtoslzjaukylvnivrzanbhjk"
+  llm_api_key: sk-rkaaajuldwebwppljkefybgzhtoslzjaukylvnivrzanbhjk
   models:
     base:
       model_name: Pro/deepseek-ai/DeepSeek-V3
@@ -27,6 +27,10 @@ llm_configuration:
       temperature: 0.7
       top_p: 0.95
 
+amap_config:
+  amap_url: https://mcp.gaode.com/sse
+  amap_api_key: 9844bb9e68e07657eb1222cf6e26f3ed
+
 application_settings:
   log_level: INFO
   log_dir: ./output/logs
@@ -35,7 +39,7 @@ application_settings:
   max_retries: 3
   default_currency: USD
 
-database_configuration:
+db_config:
   docs_path: ./data/docs
   es_db_url: http://localhost:9200/
   es_db_usr: elastic
@@ -43,12 +47,13 @@ database_configuration:
   es_db_index: es_index
   es_db_local: data/esdata
   vector_db_path: ./data/vector_db
-  embedding_model: "intfloat/multilingual-e5-large-instruct"
+  embedding_model: intfloat/multilingual-e5-large-instruct
   embedding_type: "sentence_transformer"
   chunk_size: 1024
   chunk_overlap: 256
-  search_type: mmr
-  lambda_mult: 0.25
+  search_type: similarity_score_threshold
+  score_threshold: 0.855
+  # lambda_mult: 0.25
   k: 5
   weights: [0.3, 0.7]
   

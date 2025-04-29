@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 async def init_db():
     # Load Config
     config = load_config()
-    database_configuration = config['database_configuration']
-    docs_path = database_configuration['docs_path']
-    chunk_size = database_configuration['chunk_size']
-    chunk_overlap = database_configuration['chunk_overlap']
+    db_config = config['db_config']
+    docs_path = db_config['docs_path']
+    chunk_size = db_config['chunk_size']
+    chunk_overlap = db_config['chunk_overlap']
     chunked_docs, new_sources = load_docs(docs_path, chunk_size, chunk_overlap)
 
     # Initialize ElasticSearch
-    es_client = ElasticSearch(database_configuration)
+    es_client = ElasticSearch(db_config)
     await es_client.initialize(chunked_docs)
     if await es_client.ping():
         logger.info("Successfully connect to Elasticsearch!")
@@ -30,7 +30,7 @@ async def init_db():
         logger.info("Fail to connect tot Elasticsearch")
 
     # Initialize FAISS
-    FAISS = VectorDB(database_configuration)
+    FAISS = VectorDB(db_config)
     await FAISS.initialize(chunked_docs)
     logger.info("Successfully instantiate FAISS!!")
 

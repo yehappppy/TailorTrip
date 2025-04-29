@@ -16,22 +16,25 @@ logging.basicConfig(
 )
 
 async def main():
-    query = "台湾美食"
+    query = "香港迪士尼攻略"
 
     results = await FuzzySearch.ainvoke(query)
     print(f"{'-' * 10} FuzzySearch {'-' * 10}")
     print(len(results))
-    print(results)
+    for result in results:
+        print(result)
     
     results = await SemanticSearch.ainvoke(query)
     print(f"{'-' * 10} SemanticSearch {'-' * 10}")
     print(len(results))
-    print(results)
+    for result in results:
+        print(result)
 
     results = await EssembleSearch.arun(query)
     print(f"{'-' * 10} EssembleSearch {'-' * 10}")
     print(len(results))
-    print(results)
+    for result in results:
+        print(result)
 
 if __name__ == '__main__':
     asyncio.run(main())

@@ -86,10 +86,19 @@ class VectorDB:
         """Convert the vector database to tool state"""
         self.index_built_event = asyncio.Event()
         self.index_built_event.set()
-        retriever = self.db.as_retriever(
-            search_type = self.config["search_type"], 
-            search_kwargs = {"k": self.config["k"], "lambda_mult": self.config["lambda_mult"]}
-        )
+
+        params = {"search_kwargs": {"k": self.config["k"]}}
+        search_type = self.config.get("search_type")
+        lambda_mult = self.config.get("lambda_mult")
+        score_threshold = self.config.get("score_threshold")
+
+        if search_type == "mmr" and lambda_mult:
+            params["search_type"] = search_type
+            params["search_kwargs"]["lambda_mult"] = lambda_mult
+        elif search_type == "similarity_score_threshold" and score_threshold:
+            params["search_type"] = search_type
+            params["search_kwargs"]["score_threshold"] = score_threshold
+        retriever = self.db.as_retriever(**params)
         return retriever
 
     async def search(self, query: str, k: int) -> List[Dict]:

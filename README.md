@@ -11,6 +11,51 @@ TailorTrip是一个基于LLM的智能旅行规划助手，能够根据用户的�
 
 ## 快速开始
 
+### 用uv管理python环境
+uv比conda简洁高效
+1. 安装uv 
+
+```bash
+# On macOS and Linux.
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows.
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# With pip.
+pip install uv
+```
+2. 检查安装
+```bash
+uv help
+```
+
+3. 创建虚拟环境
+```bash
+cd /path/to/TailorTrip
+uv venv .venv
+# uv venv .venv --python 3.13.3
+```
+
+4. 激活虚拟环境
+```bash
+# On macOS and Linux.
+source .venv/bin/activate
+
+# On Windows.
+.venv\Scripts\activate
+```
+
+5. 安装依赖
+```bash
+uv pip install -r requirements.txt
+```
+
+6. 测试代码
+```bash
+uv run test.py
+```
+
 ### 环境要求
 - Python 3.12+
 - 依赖包：见requirements.txt（懒人安装requirements_solid.txt，钉死版本能运行）

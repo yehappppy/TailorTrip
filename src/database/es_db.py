@@ -63,7 +63,7 @@ class ElasticSearch(AsyncElasticsearch):
                 }
             })
             actions.append({
-                "content": doc.page_content,
+                "page_content": doc.page_content,
                 "metadata": doc.metadata
             })
         if actions:

@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import uuid
 import logging
@@ -6,6 +7,49 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
+
+def extract_blogs(text_data):
+    """
+    Extract blog information from the text data.
+    
+    Parameters:
+        text_data: Text containing multiple blogs.
+        
+    Returns:
+        A list of dictionaries, each representing a blog with the following structure:
+        {
+            "title": Title,
+            "content": Content,
+            "comment": Comment,
+            "ocr": OCR text
+        }
+    """
+    # Define regex pattern to match each blog block
+    blog_pattern = re.compile(
+        r'<blog \d+>.*?'
+        r'<title>(.*?)</title>.*?'
+        r'<content>(.*?)</content>.*?'
+        r'<comment>(.*?)</comment>.*?'
+        r'<ocr>(.*?)</ocr>.*?'
+        r'</blog \d+>',
+        re.DOTALL  # Make '.' match all characters including newlines
+    )
+    
+    # Find all matching blog entries
+    blogs = blog_pattern.findall(text_data)
+    
+    # Convert matches into a list of dictionaries
+    blog_list = []
+    for blog in blogs:
+        blog_dict = {
+            "title": blog[0].strip(),
+            "content": blog[1].strip(),
+            "comment": blog[2].strip(),
+            "ocr": blog[3].strip()
+        }
+        blog_list.append(blog_dict)
+    
+    return blog_list
 
 def load_docs(docs_path: str, chunk_size: int, chunk_overlap: int):
     chunked_docs = []
@@ -36,9 +80,22 @@ def load_docs(docs_path: str, chunk_size: int, chunk_overlap: int):
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
-                    for text in splitter.split_text(content):
+                    blogs = extract_blogs(content)
+                    for blog in blogs:
+                        title = blog.get("title", "")
+                        content = blog.get("content", "")
+                        comment = blog.get("comment", "")
                         chunked_docs.append(
-                            Document(id=str(uuid.uuid4()), page_content=text, metadata={"source": file_path})
+                            Document(
+                                id=str(uuid.uuid4()),
+                                page_content=" ".join([title, content]),
+                                metadata={
+                                    "source": file_path,
+                                    "title": title,
+                                    "content": content,
+                                    "comment": comment
+                                }
+                            )
                         )
                     new_sources.add(file_path)
                     logger.info(f"Loaded new document: {file_path}")
