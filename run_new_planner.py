@@ -1,9 +1,9 @@
-# Entry point for new_planner
+# Entry point for content generation planner
 import json
 import sys
 import time
 import argparse
-from src.llm_agent.new_planner.workflow import generate_plan
+from src.llm_agent.content_generation.workflow import generate_plan
 
 def main():
     """主函数，处理命令行参数并执行规划生成"""
@@ -15,9 +15,6 @@ def main():
     
     user_input = args.query
     max_depth = args.max_depth
-    
-    if user_input == '云南旅游':
-        print(f"未提供输入参数，使用默认值: '{user_input}'")
     
     print(f"\n[1/3] 开始处理用户输入: '{user_input}'")
     print(f"      最大深度限制: {max_depth}")

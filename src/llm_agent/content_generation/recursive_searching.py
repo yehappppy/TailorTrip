@@ -4,10 +4,10 @@ import copy
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from src.utils.llm import base_llm, fast_llm
 from src.utils.util import get_logger, structure_output
-from src.llm_agent.new_planner.planning import search_entity_info, update_plan_with_info, create_initial_plan
-from src.llm_agent.new_planner.keyword_extraction import extract_entities
+from src.llm_agent.content_generation.planning import search_entity_info, update_plan_with_info, create_initial_plan
+from src.llm_agent.content_generation.keyword_extraction import extract_entities
 
-logger = get_logger("new_planner.recursive")
+logger = get_logger("content_generation.recursive")
 
 def check_entity_exists(entity: str, plan_tree: Dict[str, Any]) -> bool:
     """
@@ -351,7 +351,7 @@ def collect_all_references(node: Dict[str, Any], references: List[str]):
     for child in node.get('children', []):
         collect_all_references(child, references)
 
-def recursive_search(initial_result: Dict[str, Any], max_depth: int = 3) -> Dict[str, Any]:
+def recursive_search(initial_result: Dict[str, Any], max_depth: int = 2) -> Dict[str, Any]:
     """
     执行递归规划
     

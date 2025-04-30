@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Dict
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from src.utils.llm import fast_llm
+from src.utils.llm import fast_llm, base_llm, cot_llm
+from src.utils.util import structure_output
 
 # 关键词提取提示词
 KEYWORD_EXTRACTION_PROMPT = """
@@ -90,16 +91,16 @@ def get_extraction_messages(search_result: str) -> List:
 
 def extract_entities(search_result: str) -> List[str]:
     """
-    从搜索结果中提取实体关键词
+    从搜索结果中提取实体
     
     Args:
         search_result: 搜索结果文本
         
     Returns:
-        List[str]: 提取的实体关键词列表
+        List[str]: 提取的实体列表
     """
     messages = get_extraction_messages(search_result)
-    llm = fast_llm()
+    llm = base_llm()
     response = llm.invoke(messages)
     
     # 解析响应内容，预期是逗号分隔的实体列表
@@ -110,3 +111,87 @@ def extract_entities(search_result: str) -> List[str]:
     # 分割并清理实体列表
     entities = [e.strip() for e in entities_text.split(',') if e.strip()]
     return entities
+
+# 初始实体提取提示词
+INITIAL_EXTRACTION_PROMPT = """
+你是一个旅游规划助手。请根据用户的搜索结果和偏好，提取最相关的子实体关键词。
+
+请考虑以下因素：
+1. 用户偏好：
+   - 地区：优先考虑用户指定地区内的实体
+   - 人数：团体游玩需要考虑容纳量和适合度
+   - 标准：根据预算标准筛选合适的景点
+   - 时长：根据游玩时长安排合适数量的景点
+
+2. 实体提取要求：
+   - 提取的实体必须是具体的地点、景点、建筑或游玩项目
+   - 实体应该比当前关键词在概念范围上更小
+   - 最多提取5个最符合用户偏好的实体
+   - 如果实体容易混淆，需要加上父实体作为前缀
+
+请用以下JSON格式返回结果：
+{
+    "reasoning": "选择这些实体的原因（考虑了哪些用户偏好）",
+    "entities": ["实体1", "实体2", ...]
+}
+"""
+
+INITIAL_EXTRACTION_SAMPLE_INPUT = """搜索结果：昆明，云南省会，素有春城美誉。这座高原城市坐拥滇池碧波、石林奇观和西山森林公园等自然胜景，民族村展示少数民族文化风情。街头巷尾飘荡着过桥米线、汽锅鸡的香气，斗南花卉市场每日流转百万支鲜花。
+
+用户偏好：
+{
+    "地区": "昆明",
+    "人数": "3",
+    "标准": "300每人",
+    "时长": "一日游"
+}
+"""
+
+INITIAL_EXTRACTION_SAMPLE_OUTPUT = """{
+    "entities": ["昆明石林", "滇池", "昆明西山森林公园"],
+    "reasoning": "考虑到是3人一日游，选择了昆明市内和周边的主要景点。这些景点门票都在预算范围内，且都适合3人团体游玩。一天时间可以游览2-3个景点。"
+}"""
+
+def get_initial_extraction_messages(search_result: str, user_preference: Dict) -> List:
+    """
+    构建初始实体提取的消息列表
+    
+    Args:
+        search_result: 搜索结果文本
+        user_preference: 用户偏好字典，包含地区、人数、标准、时长等信息
+        
+    Returns:
+        List: 包含系统提示、示例和输入的消息列表
+    """
+    # 构建输入文本，包含搜索结果和用户偏好
+    input_text = f"搜索结果：{search_result}\n\n用户偏好：\n{user_preference}"
+    
+    return [
+        SystemMessage(content=INITIAL_EXTRACTION_PROMPT),
+        HumanMessage(content=INITIAL_EXTRACTION_SAMPLE_INPUT),
+        AIMessage(content=INITIAL_EXTRACTION_SAMPLE_OUTPUT),
+        HumanMessage(content=input_text)
+    ]
+
+
+def extract_initial_entities(search_result: str, user_preference: Dict) -> Dict:
+    """
+    根据搜索结果和用户偏好提取初始实体
+    
+    Args:
+        search_result: 搜索结果文本
+        user_preference: 用户偏好字典，包含地区、人数、标准、时长等信息
+        
+    Returns:
+        Dict: 包含提取的实体列表和推理过程的字典
+    """
+    messages = get_initial_extraction_messages(search_result, user_preference)
+    llm = cot_llm()
+    response = llm.invoke(messages)
+    
+    result = structure_output(response.content)
+    
+    if not result or 'entities' not in result:
+        return {"entities": [], "reasoning": ""}
+    
+    return result

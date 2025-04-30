@@ -1,19 +1,22 @@
 # 新版规划器的工作流定义和核心功能
 from typing import Dict, Any, List
+import json
+from langchain_core.messages import SystemMessage, HumanMessage
 from src.utils.util import get_logger
-from src.llm_agent.new_planner.keyword_extraction import extract_keyword
-from src.llm_agent.new_planner.planning import create_initial_plan
-from src.llm_agent.new_planner.recursive_searching import recursive_search
+from src.utils.llm import cot_llm
+from src.llm_agent.content_generation.keyword_extraction import extract_keyword
+from src.llm_agent.content_generation.planning import create_initial_plan
+from src.llm_agent.content_generation.recursive_searching import recursive_search
 from src.tools.crawl import pesudo_crawl
 
-logger = get_logger("new_planner.workflow")
+logger = get_logger("content_generation.workflow")
 
-def generate_plan(user_input: str, max_depth: int = 3) -> Dict[str, Any]:
+def generate_recursive_plan(query: str, preference: Dict = None, max_depth: int = 3) -> Dict[str, Any]:
     """
     根据用户输入生成分层规划的主入口函数
     
     Args:
-        user_input: 用户输入的查询或需求描述
+        query: 用户输入的查询或需求描述
         max_depth: 最大深度限制，同时控制递归轮数和树高度，默认为3
         
     Returns:
@@ -22,10 +25,10 @@ def generate_plan(user_input: str, max_depth: int = 3) -> Dict[str, Any]:
             - "references": 搜索参考信息
             - "plan": 分层规划结果
     """
-    logger.info(f"开始为用户生成分层规划，输入：{user_input}")
+    logger.info(f"开始为用户生成分层规划，输入：{query}")
     
     # 步骤1：提取关键词
-    keyword = extract_keyword(user_input)
+    keyword = extract_keyword(query)
     logger.info(f"关键词提取完成：{keyword}")
     print(f">>> 提取的关键词: {keyword}")
     
@@ -52,7 +55,7 @@ def generate_plan(user_input: str, max_depth: int = 3) -> Dict[str, Any]:
     logger.info(f"递归规划完成")
     print(f">>> 递归规划完成")
     
-    # 构建返回结果
+    # 构建基础结果
     result = {
         "keyword": keyword,
         "references": final_result.get("references", []),
@@ -61,6 +64,16 @@ def generate_plan(user_input: str, max_depth: int = 3) -> Dict[str, Any]:
     
     # 打印参考信息数量
     print(f">>> 收集的参考信息数量: {len(result['references'])}")
+    
+    # 生成最终的综合回答
+    from .answer_generation import generate_recursive_answer
+    result["answer"] = generate_recursive_answer(query, result["plan"])
+    
+    # 打印综合回答
+    print("\n>>> 综合回答:")
+    print("-" * 50)
+    print(result["answer"])
+    print("-" * 50)
     
     logger.info("分层规划生成完成")
     return result

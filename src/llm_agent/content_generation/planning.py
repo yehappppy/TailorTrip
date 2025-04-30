@@ -7,7 +7,7 @@ from src.utils.llm import base_llm
 from src.utils.util import get_logger, structure_output
 from src.tools.crawl import pesudo_crawl
 
-logger = get_logger("new_planner.planning")
+logger = get_logger("content_generation.planning")
 
 
 
