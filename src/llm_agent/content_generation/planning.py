@@ -1,91 +1,131 @@
 from typing import Dict, Any, List
 import json
-
+import re
+import copy
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from src.utils.llm import base_llm
 from src.utils.util import get_logger, structure_output
-from src.utils.llm import base_llm, cot_llm, fast_llm
-from src.tools import crawl
-from src.llm_agent.content_generation.prompt import (
-    get_keyword_generation_messages,
-    get_planning_messages
-)
+from src.tools.crawl import pesudo_crawl
 
-# 获取日志记录器
-logger = get_logger("planning")
+logger = get_logger("new_planner.planning")
 
-def generate_initial_keyword(user_description: str) -> str:
-    """根据用户描述生成初始搜索关键词"""
-    logger.info("生成初始搜索关键词")
-    llm = fast_llm()
-    messages = get_keyword_generation_messages(user_description)
-    response = llm.invoke(messages)
-    keyword = response.content.strip()
-    logger.info(f"生成的初始关键词: {keyword}")
-    return keyword
 
-def generate_search_plan(overview: str) -> Dict[str, Any]:
-    """根据概览信息生成详细的搜索计划
+
+# 初始规划生成提示词
+INITIAL_PLAN_PROMPT = """
+请为给定的关键词创建一个初始规划节点。返回一个JSON对象，包含以下字段：
+- entity（实体名称，就是给定的关键词）
+- information（空字符串，空信息）
+- children（空数组，表示没有子节点）
+- is_complete（false，表示该节点信息不完整）
+
+只需返回JSON对象，不需要额外解释。
+"""
+
+INITIAL_PLAN_SAMPLE_INPUT = "云南旅游"
+INITIAL_PLAN_SAMPLE_OUTPUT = """
+{
+  "entity": "云南旅游",
+  "information": "",
+  "is_complete": false,
+  "children": []
+}
+"""
+
+def get_initial_plan_messages(keyword: str) -> List:
+    """
+    构建初始规划的消息列表
     
     Args:
-        overview: 概览信息文本，包含目的地的主要景点、美食、交通等信息
+        keyword: 关键词
         
     Returns:
-        Dict[str, Any]: 包含以下键的字典：
-            - "search_plan": 进行搜索获取信息的计划
-            - "keywords": 所有需要搜索的关键词列表
+        List: 包含系统提示、示例和关键词的消息列表
     """
-    logger.info("开始生成详细的搜索计划")
     
-    # 使用cot_llm进行复杂的规划任务
+    return [
+        SystemMessage(content=INITIAL_PLAN_PROMPT),
+        HumanMessage(content=INITIAL_PLAN_SAMPLE_INPUT),
+        AIMessage(content=INITIAL_PLAN_SAMPLE_OUTPUT),
+        HumanMessage(content=keyword)
+    ]
+
+def create_initial_plan(keyword: str) -> Dict[str, Any]:
+    """
+    为关键词创建初始规划节点
+    
+    Args:
+        keyword: 关键词
+        
+    Returns:
+        Dict[str, Any]: 初始规划节点
+    """
+    # 使用LLM创建初始规划节点
+    messages = get_initial_plan_messages(keyword)
     llm = base_llm()
-    messages = get_planning_messages(overview)
-
     response = llm.invoke(messages)
     
-    try:
-        # 解析响应JSON
-        plan_data = structure_output(response.content)
-        
-        # 构建返回结果
-        result = {
-            "thinking_process": plan_data['thinking_process'],
-            "search_plan": plan_data['search_plan'],
-            "keywords": plan_data['keywords']
+    # 解析规划JSON
+    plan = structure_output(response.content)
+    if plan is None:
+        plan = {}
+    
+    # 如果解析失败，创建一个默认的初始节点
+    if not plan:
+        plan = {
+            "entity": keyword,
+            "information": "",
+            "is_complete": False,
+            "children": []
         }
-        
-        logger.info(f"生成了{len(result['keywords'])}个搜索关键词")
-        return result
-        
-    except json.JSONDecodeError as e:
-        logger.error(f"解析计划JSON失败: {e}")
-        raise
-    except KeyError as e:
-        logger.error(f"计划数据结构不完整: {e}")
-        raise
+    
+    return plan
 
-def planning(user_description: str) -> Dict[str, Any]:
+def search_entity_info(entity: str) -> List[str]:
     """
-    根据用户描述生成详细的搜索计划
+    搜索实体相关的信息
     
     Args:
-        user_description: 用户的描述文本
+        entity: 实体名称
         
     Returns:
-        Dict[str, Any]: 包含以下键的字典
-            - "thinking_process": 规划思路说明
-            - "itinerary": 每天的行程安排列表
-            - "keywords": 所有需要搜索的关键词列表
+        List[str]: 搜索结果列表
     """
-    logger.info(f"开始生成详细的搜索计划，用户描述: {user_description}")
+    try:
+        return pesudo_crawl.invoke(entity)
+    except AttributeError:
+        # 兼容旧版本
+        logger.warning("pesudo_crawl 使用了已弃用的 __call__ 方法，将在未来版本中移除")
+        return pesudo_crawl(entity)
+
+def update_plan_with_info(plan: Dict[str, Any], search_results: List[str]) -> Dict[str, Any]:
+    """
+    使用搜索结果直接更新规划节点
     
-    # 步骤1：生成概览信息
-    keyword = generate_initial_keyword(user_description)
+    Args:
+        plan: 当前规划节点
+        search_results: 搜索结果列表
+        
+    Returns:
+        Dict[str, Any]: 更新后的规划节点
+    """
+    # 创建规划节点的副本，避免修改原始节点
+    updated_plan = copy.deepcopy(plan)
     
-    # 步骤2：用keyword调用crawl.py中的crawl进行搜索
-    search_result = crawl(keyword)[0]
-    print(search_result)
+    # 将搜索结果合并为一个字符串
+    info_text = "\n".join(search_results) if isinstance(search_results, list) else str(search_results)
     
-    # 步骤3：生成详细的搜索计划
-    plan_data = generate_search_plan(search_result)
+    # 直接更新节点的information字段
+    updated_plan["information"] = info_text
     
-    logger.info("搜索计划生成完成")
-    return plan_data
+    # 确保其他必要字段存在
+    if "entity" not in updated_plan:
+        updated_plan["entity"] = plan.get("entity", "")
+    if "is_complete" not in updated_plan:
+        updated_plan["is_complete"] = False
+    if "children" not in updated_plan:
+        updated_plan["children"] = []
+    
+    logger.info(f"直接更新节点 '{updated_plan['entity']}' 的信息，长度: {len(info_text)} 字符")
+    
+    return updated_plan
