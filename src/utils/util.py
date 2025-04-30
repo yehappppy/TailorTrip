@@ -68,30 +68,31 @@ def structure_output(input:str):
         解析后的JSON对象，如果解析失败则返回None
     """
     try:
-        # 如果输入已经是JSON字符串，直接返回
+        # 尝试直接解析JSON
         return json.loads(input)
-    except:
+    except Exception:
         # 从标记语言代码块中提取JSON（如果存在）
         code_block_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', input)
         if code_block_match:
             input = code_block_match.group(1)
-        # 修复常见的JSON问题
-        # 将单引号替换为双引号，但保留转义的单引号
-        json_str = re.sub(r"(?<!\\)'([^']+)(?<!\\)'", r'"\1"', input)
-        # 删除尾随逗号
-        json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
-        # 为未引用的键添加引号
-        json_str = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', json_str)
-        
-        try:
-            return json.loads(json_str)
-        except:
-            # 如果仍然失败，尝试提取任何JSON类似结构
-            match = re.search(r'{[^{}]*}', json_str)
-            if match:
+            
+        # 尝试提取大括号内的内容
+        match = re.search(r'\{[\s\S]*\}', input)
+        if match:
+            try:
+                return json.loads(match.group())
+            except Exception:
+                # 修复常见的JSON问题
+                # 将单引号替换为双引号，但保留转义的单引号
+                json_str = re.sub(r"(?<!\\)'([^']+)(?<!\\)'", r'"\\1"', match.group())
+                # 删除尾随逗号
+                json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+                # 为未引用的键添加引号
+                json_str = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', json_str)
+                
                 try:
-                    return json.loads(match.group())
-                except:
+                    return json.loads(json_str)
+                except Exception:
                     pass
         
         return None
