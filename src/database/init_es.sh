@@ -42,7 +42,7 @@ else
     -e "discovery.type=single-node" \
     -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
     -e "ELASTIC_PASSWORD=$es_db_pwd" \
-    -v $es_db_local:/usr/share/elasticsearch/data \
+    -v "$es_db_local":/usr/share/elasticsearch/data \
     docker.elastic.co/elasticsearch/elasticsearch:8.8.0
   # Wait until the container are created
   while true; do

@@ -4,8 +4,8 @@ __description__ = "Asynchronous Elasticsearch Database Management"
 
 import asyncio
 import logging
-from typing import Dict, List, Optional
 from langchain.schema import Document
+from typing import Dict, List, Optional
 from elasticsearch import AsyncElasticsearch
 
 logging.getLogger("elastic_transport").setLevel(logging.ERROR)

@@ -97,4 +97,4 @@ def structure_output(input:str):
         return None
 
 # 初始化默认logger
-setup_logger()
+# setup_logger()

@@ -28,7 +28,7 @@ llm_config:
       top_p: 0.95
 
 amap_config:
-  amap_url: https://mcp.gaode.com/sse
+  amap_url: https://mcp.amap.com/sse
   amap_api_key: 9844bb9e68e07657eb1222cf6e26f3ed
 
 application_settings:
@@ -41,7 +41,6 @@ application_settings:
 
 db_config:
   docs_path: ./data/docs
-  es_db_url: http://localhost:9200/
   es_db_usr: elastic
   es_db_pwd: 4AWa7iHgd/X:qdw&
   es_db_index: es_index
