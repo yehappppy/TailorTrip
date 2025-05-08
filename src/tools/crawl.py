@@ -243,13 +243,37 @@ def crawl(keyword: str) -> list[str]:
 # # print(src_parent_dir)
 # sys.path.append(src_parent_dir)
 # import src.library.MediaCrawler.config as config
-# print("config.keywords:",config.KEYWORDS)
-# time0=time.time()
-# result = crawl(config.KEYWORDS)  
-# time1=time.time()
-# print(f"finish: cost {time1-time0: .2f} seconds")
-# print(result) # 理想情况是List[str]
-# print("length of output:",len(result))
+# keyword_lists = [
+#     "香港美丽景点", "尖沙咀购物中心", "香港历史遗迹", "中环美食",
+#     "旺角夜市", "铜锣湾时尚", "香港艺术节", "香港博物馆",
+#     "大屿山风景", "维多利亚山", "香港徒步旅行", "香港海鲜",
+#     "台北文化之旅", "士林市场", "台北夜生活", "九份老街",
+#     "阿里山日出", "台中风景", "高雄美食", "台南古城",
+#     "重庆火锅文化", "解放碑美食", "洪崖洞夜景", "磁器口文化",
+#     "长江游船", "重庆市博物馆", "南山风景区", "白公馆历史",
+#     "香港购物天堂", "香港潮流", "台北小吃", "台北古迹",
+#     "高雄港口", "台南美食", "重庆传统文化", "香港海滩",
+#     "香港草地音乐节", "大屿山徒步", "香港夜游", "香港节日庆典",
+#     "台北游乐园", "阳明山花季", "基隆夜市", "台南夜市",
+#     "重庆特色小吃", "重庆夜游", "重庆旅游攻略", "香港民俗文化",
+#     "香港现代艺术", "香港街头摄影", "香港花卉展", "台北街景"
+# ]
+
+# keyword_lists = ["新加坡旅游"]  ## if only one keyword, still need to store in a list
+
+# for kw in keyword_lists:
+#     config.KEYWORDS = kw
+#     print("config.keywords:",config.KEYWORDS)
+#     time0=time.time()
+#     result = crawl(config.KEYWORDS)  
+#     time1=time.time()
+#     print(f"finish: cost {time1-time0: .2f} seconds")
+#     print(result) # 理想情况是List[str]
+#     print("length of output:",len(result))
+
+
+
+
 
 
 SEARCH_INFORMATION_PROMPT = """
